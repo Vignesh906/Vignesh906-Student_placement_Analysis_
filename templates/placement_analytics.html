@@ -24,6 +24,9 @@
       <a class="nav-link" href="{{ url_for('predict') }}"><span class="icon">🔮</span> Run Prediction</a>
       <a class="nav-link active" href="{{ url_for('analytics') }}"><span class="icon">📈</span> Analytics & Graphs</a>
       <div class="nav-section-label" style="margin-top:12px;">System</div>
+      {% if session.role == 'admin' %}
+      <a class="nav-link" href="{{ url_for('admin_panel') }}"><span class="icon">🛡️</span> Admin Panel</a>
+      {% endif %}
       <a class="nav-link" href="{{ url_for('logout') }}"><span class="icon">🚪</span> Logout</a>
     </nav>
     <div class="sidebar-footer">
@@ -43,7 +46,7 @@
       <p class="page-sub">Model performance analysis, feature insights, and dataset patterns</p>
     </div>
 
-    <!-- Model Metrics Summary -->
+
     <div class="stat-grid" style="margin-bottom:28px;">
       <div class="stat-card green">
         <div class="stat-icon">🏆</div>
@@ -71,7 +74,7 @@
       </div>
     </div>
 
-    <!-- Graphs Grid -->
+   
     <div class="graph-grid" style="gap:20px;">
 
       <div class="card">
@@ -128,7 +131,7 @@
 
     </div>
 
-    <!-- Model Details Table -->
+   
     <div class="card" style="margin-top:24px;">
       <div class="card-header">
         <span class="card-title">🤖 Full Model Performance Metrics</span>
