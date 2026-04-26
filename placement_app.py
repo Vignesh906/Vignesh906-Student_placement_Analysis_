@@ -8,7 +8,6 @@ app.secret_key = os.environ.get('SECRET_KEY', 'placement_secret_key_2024')
 
 DB = 'placement_database.db'
 
-# ── DB init ────────────────────────────────────────────────────────────────
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -28,7 +27,7 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(user_id) REFERENCES users(id)
     )''')
-    # default admin
+   
     admin_pw = hashlib.sha256('admin123'.encode()).hexdigest()
     try:
         c.execute("INSERT INTO users (username,password,email,role) VALUES (?,?,?,?)",
@@ -71,15 +70,51 @@ def get_all_stats():
     conn.close()
     return students, preds, placed
 
-# ── load model ─────────────────────────────────────────────────────────────
+def get_all_users():
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("""
+        SELECT u.id, u.username, u.email, u.role, u.created_at,
+               COUNT(p.id) as total_preds,
+               SUM(CASE WHEN p.result='Placed' THEN 1 ELSE 0 END) as placed_count,
+               MAX(p.created_at) as last_active
+        FROM users u
+        LEFT JOIN predictions p ON u.id = p.user_id
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+    """)
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def get_all_predictions():
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("""
+        SELECT u.username, p.result, p.probability, p.created_at
+        FROM predictions p
+        JOIN users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT 100
+    """)
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def delete_user(user_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("DELETE FROM predictions WHERE user_id=?", (user_id,))
+    c.execute("DELETE FROM users WHERE id=? AND role!='admin'", (user_id,))
+    conn.commit()
+    conn.close()
+
 model, scaler, features = load_model()
 
-# ── startup init (runs for both gunicorn and direct python) ────────────────
 os.makedirs('static/user_graphs', exist_ok=True)
 os.makedirs('static/graphs', exist_ok=True)
 init_db()
 
-# ── routes ─────────────────────────────────────────────────────────────────
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -173,6 +208,29 @@ def analytics():
         return redirect(url_for('login'))
     return render_template('placement_analytics.html')
 
+@app.route('/admin')
+def admin_panel():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if session.get('role') != 'admin':
+        flash('Access denied. Admin only.', 'error')
+        return redirect(url_for('dashboard'))
+    users       = get_all_users()
+    predictions = get_all_predictions()
+    sys_stats   = get_all_stats()
+    placed_pct  = round((sys_stats[2] / sys_stats[1] * 100) if sys_stats[1] > 0 else 0, 1)
+    return render_template('placement_admin.html',
+                           users=users, predictions=predictions,
+                           sys_stats=sys_stats, placed_pct=placed_pct)
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+def admin_delete_user(user_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    delete_user(user_id)
+    flash('User deleted successfully.', 'success')
+    return redirect(url_for('admin_panel'))
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -182,4 +240,4 @@ if __name__ == '__main__':
     os.makedirs('static/user_graphs', exist_ok=True)
     os.makedirs('static/graphs', exist_ok=True)
     init_db()
-    app.run(debug=True, port=5002)
+    app.run(debug=True, port=5000)
