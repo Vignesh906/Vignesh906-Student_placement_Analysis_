@@ -50,6 +50,9 @@
       <a class="nav-link" href="{{ url_for('predict') }}"><span class="icon">🔮</span> Run Prediction</a>
       <a class="nav-link" href="{{ url_for('analytics') }}"><span class="icon">📈</span> Analytics & Graphs</a>
       <div class="nav-section-label" style="margin-top:12px;">System</div>
+      {% if session.role == 'admin' %}
+      <a class="nav-link" href="{{ url_for('admin_panel') }}"><span class="icon">🛡️</span> Admin Panel</a>
+      {% endif %}
       <a class="nav-link" href="{{ url_for('logout') }}"><span class="icon">🚪</span> Logout</a>
     </nav>
     <div class="sidebar-footer">
@@ -106,7 +109,7 @@
       </div>
     </div>
 
-    <!-- Feedback + Profile -->
+   
     <div class="grid-2">
       <div class="card">
         <div class="card-header">
@@ -149,7 +152,7 @@
       </div>
     </div>
 
-    <!-- Dynamic Graphs -->
+   
     {% if graphs %}
     <div class="section-heading">📊 Your Personalized Analysis</div>
     <p class="section-sub">
