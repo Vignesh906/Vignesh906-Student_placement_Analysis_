@@ -32,11 +32,10 @@
     .toggle-switch input:checked + .toggle-slider { background:var(--accent); }
     .toggle-switch input:checked + .toggle-slider::before { transform:translateX(22px); background:#fff; }
 
-    
     .collapsible { overflow:hidden; max-height:0; opacity:0; transition:max-height 0.4s ease, opacity 0.3s ease; }
     .collapsible.open { max-height:500px; opacity:1; }
 
-   
+
     .info-banner {
       display: none;
       align-items: center;
@@ -56,7 +55,7 @@
     select#degree-type-sel.technical   { border-color: var(--green);  box-shadow: 0 0 0 3px rgba(34,199,122,0.1); }
     select#degree-type-sel.nontechnical{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
 
-    
+   
     .na-badge {
       display:inline-block;
       background:rgba(247,201,72,0.1); color:var(--gold);
@@ -129,6 +128,7 @@
     <div class="predict-container">
       <form action="{{ url_for('predict') }}" method="POST" id="predict-form">
 
+        
         <div class="card mb-6">
           <div class="card-header">
             <span class="card-title">📚 Academic Performance</span>
@@ -143,7 +143,7 @@
                        placeholder="e.g. 72.5" min="40" max="100" step="0.1" required>
               </div>
               <div class="form-group">
-                <label class="form-label">HSC Percentage (12th) *</label>
+                <label class="form-label">Intermediate Percentage (12th) *</label>
                 <input type="number" name="hsc_p" class="form-control"
                        placeholder="e.g. 68.0" min="38" max="100" step="0.1" required>
               </div>
@@ -151,11 +151,11 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">HSC Stream *</label>
+                <label class="form-label">Intermediate Stream *</label>
                 <select name="hsc_s" class="form-control">
-                  <option value="Science">Science</option>
-                  <option value="Commerce">Commerce</option>
-                  <option value="Arts">Arts</option>
+                  <option value="Science">MPC/BIPC</option>
+                  <option value="Commerce">CEC/MEC</option>
+                  <option value="Arts">HEC/Arts & Humanities</option>
                 </select>
               </div>
               <div class="form-group">
@@ -178,11 +178,11 @@
                   <span class="tech-badge"    id="tech-badge">⚙️ Technical</span>
                   <span class="nontech-badge" id="nontech-badge">📋 Non-Technical</span>
                 </label>
-              
+               
                 <select name="degree_t" id="degree-type-sel"
                         class="form-control" onchange="onDegreeChange(this)">
-                  <option value="Sci&Tech">Science & Technology</option>
-                  <option value="Comm&Mgmt">Commerce & Management</option>
+                  <option value="Sci&Tech">Technical</option>
+                  <option value="Comm&Mgmt">Non-Technical</option>
                   <option value="Others">Others</option>
                 </select>
               </div>
@@ -190,7 +190,7 @@
 
             <div class="form-section-title" style="margin-top:8px;">
               MBA Details
-              <span class="na-badge" id="mba-na-badge">Not Applicable</span>
+              <span class="na-badge" id="mba-na-badge">If Applicable</span>
             </div>
             <div class="toggle-row">
               <div class="toggle-label-text">
@@ -223,7 +223,7 @@
           </div>
         </div>
 
-       
+        
         <div class="card mb-6">
           <div class="card-header">
             <span class="card-title">⚙️ Skills Assessment</span>
@@ -233,6 +233,7 @@
           </div>
           <div class="card-body">
 
+            <!-- Communication — always visible for everyone -->
             <div class="form-group">
               <label class="form-label">
                 Communication Skill (1–10)
@@ -243,6 +244,7 @@
                      oninput="document.getElementById('comm-val').textContent=this.value">
             </div>
 
+            <!-- ── TECHNICAL FIELDS — shown only for Sci&Tech ── -->
             <div class="collapsible open" id="tech-fields">
               <div class="form-group">
                 <label class="form-label">
@@ -261,24 +263,15 @@
               </div>
             </div>
 
-        
-            <div class="info-banner" id="nontech-banner">
-              <span class="icon">ℹ️</span>
-              <div>
-                <strong style="color:var(--text);">Technical fields not required</strong><br>
-                Since you selected a non-technical degree, Coding Score and Technical Skill
-                are automatically set to appropriate defaults for your profile.
-                The model accounts for this in its prediction.
-              </div>
-            </div>
+      
 
-          
+         
             <input type="hidden" name="is_technical" id="is-technical-val" value="yes">
 
           </div>
         </div>
 
-       
+        
         <div class="card mb-6">
           <div class="card-header">
             <span class="card-title">💼 Experience & Background</span>
@@ -342,6 +335,7 @@
 
 const TECHNICAL_DEGREES = ['Sci&Tech'];
 
+
 function onDegreeChange(sel) {
   const isTech = TECHNICAL_DEGREES.includes(sel.value);
   const techFields   = document.getElementById('tech-fields');
@@ -353,7 +347,7 @@ function onDegreeChange(sel) {
   const techRange    = document.getElementById('tech-range');
 
   if (isTech) {
-   
+    
     techFields.classList.add('open');
     nontechBanner.classList.remove('show');
     techBadge.style.display    = 'inline-block';
@@ -365,14 +359,14 @@ function onDegreeChange(sel) {
     techRange.disabled   = false;
     codingInput.required = true;
   } else {
-   
+  
     techFields.classList.remove('open');
     nontechBanner.classList.add('show');
     techBadge.style.display    = 'none';
     nontechBadge.style.display = 'inline-block';
     sel.className = 'form-control nontechnical';
     istech.value  = 'no';
- 
+    
     codingInput.disabled = true;
     codingInput.required = false;
     codingInput.value    = '';
@@ -380,9 +374,8 @@ function onDegreeChange(sel) {
   }
 }
 
-
 function prepareSubmit() {
-
+  
   const commRange = document.getElementById('comm-range');
   if (!commRange.value) commRange.value = 5;
 }
@@ -413,6 +406,7 @@ function toggleMBA(checkbox) {
   }
 }
 
+
 function resetForm() {
   document.getElementById('predict-form').reset();
   setTimeout(() => {
@@ -421,7 +415,7 @@ function resetForm() {
     degSel.value = 'Sci&Tech';
     onDegreeChange(degSel);
 
-   
+    
     document.getElementById('mba-toggle').checked  = false;
     document.getElementById('mba-section').classList.remove('open');
     document.getElementById('mba-na-badge').style.display = 'inline-block';
@@ -430,7 +424,7 @@ function resetForm() {
     document.getElementById('spec-input').disabled   = true;
     document.getElementById('mba-p-input').required  = false;
 
-   
+    
     document.getElementById('comm-val').textContent = '5';
     document.getElementById('tech-val').textContent = '5';
   }, 10);
@@ -439,7 +433,7 @@ function resetForm() {
 
 window.addEventListener('DOMContentLoaded', () => {
   const degSel = document.getElementById('degree-type-sel');
-  onDegreeChange(degSel); 
+  onDegreeChange(degSel); // run once with default value
 });
 </script>
 </body>
