@@ -17,7 +17,7 @@ import warnings
 import os
 warnings.filterwarnings('ignore')
 
-# ── palette ────────────────────────────────────────────────────────────────
+
 PLACED_CLR   = '#00C9A7'
 NOTPLACED_CLR = '#FF6B6B'
 ACCENT       = '#4E9AF1'
@@ -42,7 +42,6 @@ def set_dark_style():
         'axes.spines.right':False,
     })
 
-# ── load & preprocess ──────────────────────────────────────────────────────
 df = pd.read_csv('placement_dataset.csv')
 df_encoded = pd.get_dummies(df, columns=['gender','hsc_s','degree_t','workex','specialisation'])
 df_encoded['target'] = (df_encoded['status'] == 'Placed').astype(int)
@@ -58,7 +57,7 @@ scaler = StandardScaler()
 X_train_sc = scaler.fit_transform(X_train)
 X_test_sc  = scaler.transform(X_test)
 
-# ── train models ───────────────────────────────────────────────────────────
+
 models = {
     'Random Forest':     RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42),
     'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
@@ -89,7 +88,7 @@ best_name = max(results, key=lambda k: results[k]['f1'])
 best_model = results[best_name]['model']
 print(f"\n✅ Best model: {best_name}")
 
-# ── save model & scaler ────────────────────────────────────────────────────
+
 joblib.dump(best_model, 'placement_model.pkl')
 joblib.dump(scaler,     'placement_scaler.pkl')
 joblib.dump(features,   'placement_features.pkl')
@@ -97,9 +96,7 @@ print("Model, scaler, features saved.")
 
 os.makedirs('static/graphs', exist_ok=True)
 
-# ──────────────────────────────────────────────────────────────────────────
-# GRAPH 1 – Model Accuracy Comparison
-# ──────────────────────────────────────────────────────────────────────────
+
 set_dark_style()
 fig, ax = plt.subplots(figsize=(10, 6))
 fig.patch.set_facecolor(BG)
@@ -132,9 +129,7 @@ plt.savefig('static/graphs/model_comparison.png', dpi=150, bbox_inches='tight', 
 plt.close()
 print("✅ model_comparison.png saved")
 
-# ──────────────────────────────────────────────────────────────────────────
-# GRAPH 2 – Feature Importance (Random Forest)
-# ──────────────────────────────────────────────────────────────────────────
+
 set_dark_style()
 rf = results['Random Forest']['model']
 importances = pd.Series(rf.feature_importances_, index=features).sort_values(ascending=True).tail(15)
@@ -158,15 +153,12 @@ plt.savefig('static/graphs/feature_importance.png', dpi=150, bbox_inches='tight'
 plt.close()
 print("✅ feature_importance.png saved")
 
-# ──────────────────────────────────────────────────────────────────────────
-# GRAPH 3 – Placement Distribution
-# ──────────────────────────────────────────────────────────────────────────
 set_dark_style()
 counts = df['status'].value_counts()
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 fig.patch.set_facecolor(BG)
 
-# Bar chart
+
 clrs = [PLACED_CLR, NOTPLACED_CLR]
 bars = axes[0].bar(counts.index, counts.values, color=clrs, edgecolor='none', width=0.5, zorder=3)
 for bar, v in zip(bars, counts.values):
@@ -179,7 +171,7 @@ axes[0].yaxis.grid(True, zorder=0)
 axes[0].set_axisbelow(True)
 axes[0].set_ylim(0, counts.max() * 1.2)
 
-# Donut
+
 wedges, texts, autotexts = axes[1].pie(
     counts.values, labels=counts.index, autopct='%1.1f%%',
     colors=clrs, startangle=90, pctdistance=0.78,
@@ -194,9 +186,9 @@ plt.savefig('static/graphs/placement_distribution.png', dpi=150, bbox_inches='ti
 plt.close()
 print("✅ placement_distribution.png saved")
 
-# ──────────────────────────────────────────────────────────────────────────
+
 # GRAPH 4 – Skills vs Placement (Scatter)
-# ──────────────────────────────────────────────────────────────────────────
+
 set_dark_style()
 fig, axes = plt.subplots(1, 2, figsize=(13, 5))
 fig.patch.set_facecolor(BG)
