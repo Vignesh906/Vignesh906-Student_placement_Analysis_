@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import os, uuid
 
-# ── Palette ────────────────────────────────────────────────────────────────
+
 BG          = '#0B0D14'
 CARD        = '#161A28'
 CARD2       = '#1C2133'
@@ -45,9 +45,6 @@ def _save(fig, name, out_dir):
     return path
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# GRAPH 1 — Academic Score Comparison (user vs dataset percentiles)
-# ══════════════════════════════════════════════════════════════════════════
 def graph_academic_comparison(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
     _base_style()
 
@@ -93,9 +90,7 @@ def graph_academic_comparison(user_data: dict, df: pd.DataFrame, out_dir: str) -
     return _save(fig, 'dyn_academic.png', out_dir)
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# GRAPH 2 — Skill Radar Chart (user vs avg placed)
-# ══════════════════════════════════════════════════════════════════════════
+
 def graph_skill_radar(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
     _base_style()
 
@@ -119,7 +114,7 @@ def graph_skill_radar(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
             placed['projects'].mean()      / 4,
         ]
     else:
-        # Non-technical — replace coding & technical with etest & degree
+     
         categories = ['Communication', 'Etest\n(/100)', 'Degree\n(%)', 'Internships\n(/3)', 'Projects\n(/4)']
         user_vals  = [
             float(user_data.get('communication', 0)) / 10,
@@ -173,9 +168,6 @@ def graph_skill_radar(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
     return _save(fig, 'dyn_radar.png', out_dir)
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# GRAPH 3 — Probability Gauge / Speedometer
-# ══════════════════════════════════════════════════════════════════════════
 def graph_probability_gauge(probability: float, out_dir: str) -> str:
     _base_style()
 
@@ -186,7 +178,7 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
     ax.set_ylim(-0.6, 1.3)
     ax.axis('off')
 
-    # Draw arc segments
+
     segments = [
         (0,   25,  NOT_CLR,    'Very Low'),
         (25,  50,  '#FF9F45',  'Low'),
@@ -204,7 +196,7 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
         )
         ax.add_patch(arc)
 
-    # Needle
+
     needle_angle = np.radians(180 - (probability / 100) * 180)
     needle_len   = 0.82
     ax.annotate('',
@@ -213,11 +205,11 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
         arrowprops=dict(arrowstyle='->', color=USER_CLR, lw=2.8,
                         mutation_scale=18))
 
-    # Center dot
+   
     circle = plt.Circle((0, 0), 0.06, color=USER_CLR, zorder=5)
     ax.add_patch(circle)
 
-    # Probability text
+
     color = PLACED_CLR if probability >= 50 else NOT_CLR
     ax.text(0, -0.28, f'{probability:.1f}%', ha='center', va='center',
             fontsize=32, fontweight='bold', color=color,
@@ -225,7 +217,7 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
     ax.text(0, -0.48, 'Placement Probability', ha='center', va='center',
             fontsize=11, color=TEXT2)
 
-    # Zone labels
+    
     for start, end, color, label in segments:
         mid   = (start + end) / 2
         angle = np.radians(180 - (mid / 100) * 180)
@@ -233,7 +225,7 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
         ax.text(r * np.cos(angle), r * np.sin(angle), label,
                 ha='center', va='center', fontsize=7.5, color=TEXT2)
 
-    # Scale ticks
+  
     for pct in [0, 25, 50, 75, 100]:
         angle = np.radians(180 - (pct / 100) * 180)
         ax.text(0.72 * np.cos(angle), 0.72 * np.sin(angle),
@@ -245,9 +237,7 @@ def graph_probability_gauge(probability: float, out_dir: str) -> str:
     return _save(fig, 'dyn_gauge.png', out_dir)
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# GRAPH 4 — Weak Areas Bar Chart
-# ══════════════════════════════════════════════════════════════════════════
+
 def graph_weak_areas(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
     _base_style()
 
@@ -307,9 +297,6 @@ def graph_weak_areas(user_data: dict, df: pd.DataFrame, out_dir: str) -> str:
     return _save(fig, 'dyn_weakareas.png', out_dir)
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# MAIN — Generate all 4 dynamic graphs for a prediction session
-# ══════════════════════════════════════════════════════════════════════════
 def generate_dynamic_graphs(user_data: dict, probability: float) -> dict:
     """
     Generates 4 personalized graphs for the result page.
@@ -317,7 +304,7 @@ def generate_dynamic_graphs(user_data: dict, probability: float) -> dict:
     """
     df = pd.read_csv('placement_dataset.csv')
 
-    # Each prediction gets its own subfolder so concurrent users don't clash
+  
     session_id = uuid.uuid4().hex[:10]
     out_dir    = os.path.join('static', 'user_graphs', session_id)
     os.makedirs(out_dir, exist_ok=True)
@@ -327,7 +314,7 @@ def generate_dynamic_graphs(user_data: dict, probability: float) -> dict:
     graph_probability_gauge(probability, out_dir)
     graph_weak_areas(user_data, df, out_dir)
 
-    # Return web-accessible paths
+
     return {
         'academic':  f'user_graphs/{session_id}/dyn_academic.png',
         'radar':     f'user_graphs/{session_id}/dyn_radar.png',
